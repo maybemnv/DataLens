@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Upload, FileText, CheckCircle2, AlertCircle, X, LogOut, Clock, User } from "lucide-react"
+import { Upload, FileText, CheckCircle2, AlertCircle, X, LogOut, Clock } from "lucide-react"
 import { api, validateFile, MAX_UPLOAD_SIZE } from "@/lib/api"
 import { useAuthStore } from "@/lib/stores/auth"
 import { cn } from "@/lib/utils"
@@ -34,7 +34,7 @@ export default function HomePage() {
         router.push("/login?redirect=/")
       }
     })
-  }, [])
+  }, [checkAuth, router])
 
   const handleLogout = () => {
     logout()

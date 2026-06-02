@@ -18,7 +18,7 @@ Based on [PRD v2.0](docs/PRD.md) — **Terminal Aesthetic Edition**
 
 - [x] **Tool Wrapping**
   - [x] Create Pydantic input schemas for all analyzer functions
-  - [x] Wrap functions as LangChain tools (15 tools total)
+  - [x] Wrap functions as LangChain tools (14 tools: dataset, statistical, ml, time_series)
   - [x] Implement `describe_dataset` tool
   - [x] Implement `generate_chart_spec` tool
 
@@ -27,19 +27,26 @@ Based on [PRD v2.0](docs/PRD.md) — **Terminal Aesthetic Edition**
   - [x] Create streaming callback handler for LangChain to WebSocket
   - [x] Implement file upload endpoint (`/upload`) with validation
   - [x] Create session management for file/dataframe context
+  - [x] JWT authentication (register, login, me, sessions endpoints)
 
 - [x] **Testing**
   - [x] Write integration tests for all migrated tools
-  - [x] Verify tool outputs match v1 outputs
-  - [x] 70 tests passing across API, statistical, ML, time series, benchmarks
+  - [x] 241 tests passing across API, statistical, ML, time series, benchmarks
+  - [x] Comprehensive edge-case test suites for each tool domain
+
+- [ ] **Additional Tools (PRD-specified, deps installed)**
+  - [ ] Implement `run_umap` LangChain tool (umap-learn installed)
+  - [ ] Implement `run_hdbscan` LangChain tool (hdbscan installed)
+  - [ ] Implement `run_shap` LangChain tool (shap installed)
 
 ## Phase 2: Agent Core (Week 2–3)
 **Goal:** A smart ReAct agent that can plan and execute analysis.
 
 - [x] **Agent Implementation**
   - [x] Initialize LangChain ReAct agent
-  - [x] Register the 15-tool registry with the agent
-  - [x] Configure LLM (Gemini 1.5 Pro / GPT-4o) integration
+  - [x] Register the 14-tool registry with the agent
+  - [x] Configure LLM (Groq — `qwen/qwen3-32b` via `langchain-groq`)
+  - [x] Executor caching per session (10min TTL) to avoid cold-start penalty
 
 - [x] **Context Management**
   - [x] Build Dataset Context Manager (schema, dtypes, sample rows)
@@ -47,70 +54,77 @@ Based on [PRD v2.0](docs/PRD.md) — **Terminal Aesthetic Edition**
 
 - [x] **Agent Logic**
   - [x] Implement structured output parser for "Final Answer"
-  - [x] Implement error handling (retries on tool failure)
-  - [x] Create benchmark query set (30 queries) for testing
+  - [x] Implement error handling (retries with exponential backoff on tool failures)
+  - [x] Create benchmark query set (35 queries) for testing
   - [x] Optimize system prompt for tool selection accuracy
+  - [x] Rate limiting (max 3 concurrent agent runs per session)
 
 ## Phase 3: Frontend Shell (Week 3–4)
-**Goal:** Next.js 15 application with terminal aesthetic and real-time communication.
+**Goal:** Next.js 16 application with terminal aesthetic and real-time communication.
 
-- [X] **Frontend Setup**
-  - [X] Initialize Next.js 15 (App Router) project
-  - [X] Install and configure Tailwind CSS with custom theme
-  - [X] Install `shadcn/ui` — use as base, not final design
-  - [X] Set up typography: Geist Mono (body), Satoshi (headings)
-  - [X] Configure color tokens: warm black (#0A0A0F), burnt orange (#FF6B35), teal (#00DCB4)
+- [x] **Frontend Setup**
+  - [x] Initialize Next.js 16 (App Router) project
+  - [x] Install and configure Tailwind CSS v4 with custom theme
+  - [x] Install `shadcn/ui` — use as base, not final design
+  - [x] Configure typography: Geist Mono (body), Satoshi (headings)
+  - [x] Configure color tokens: warm black (#0A0A0F), burnt orange (#FF6B35), teal (#00DCB4)
 
-- [X] **Core Layout**
-  - [X] Implement Three-Panel Layout (Sidebar 280px, Chat flexible, Viz 360px)
-  - [X] Build Sidebar component (File info, session controls, column browser)
-  - [X] Implement agent timeline scrubber at bottom
+- [x] **Core Layout**
+  - [x] Implement Three-Panel Layout (Sidebar 280px, Chat flexible, Viz 360px)
+  - [x] Build Sidebar component (File info, session controls, column browser)
+  - [ ] Agent timeline scrubber at bottom — NOT IMPLEMENTED
 
-- [X] **Agent Components**
-  - [X] Build `AgentAvatar` — animated orb that pulses/shifts color
-  - [X] Create `ThoughtStep` with typewriter animation (~60 WPM)
-  - [X] Create `ToolCallCard` that builds itself (args populate one by one)
-  - [X] Implement `AgentChat` with message thread
+- [x] **Agent Components**
+  - [x] Build `AgentAvatar` — animated orb that pulses/shifts color
+  - [x] Create `ThoughtStep` with typewriter animation (~60 WPM)
+  - [x] Create `ToolCallCard` that builds itself (args populate one by one)
+  - [x] Implement `AgentChat` with message thread
 
-- [X] **Communication**
-  - [X] Implement `useWebSocket` hook with message queue
-  - [X] Define TypeScript interfaces for WebSocket message types
-  - [X] Add typing indicator when agent is thinking
+- [x] **Communication**
+  - [x] Implement `useWebSocket` hook with exponential backoff reconnection
+  - [x] Define TypeScript interfaces for WebSocket message types
+  - [x] Add typing indicator when agent is thinking
 
-- [X] **File Upload**
-  - [X] Create Drag-and-Drop upload component
-  - [X] Implement "unfold" animation — rows animate in as parsed
-  - [X] Connect upload to backend API
-  - [X] Add upload progress indicator
+- [x] **File Upload**
+  - [x] Create Drag-and-Drop upload component
+  - [x] Implement parsing animation — skeleton table shows while processing
+  - [x] Connect upload to backend API
+  - [x] Add upload progress indicator (real XHR percentage)
 
-- [X] **Command Palette**
-  - [X] Implement `Cmd+K` command palette
-  - [X] Context-aware suggested queries based on data type
-  - [X] Keyboard-first navigation
+- [x] **Command Palette**
+  - [x] Implement `Cmd+K` command palette
+  - [x] Context-aware suggested queries based on data type
+  - [x] Keyboard-first navigation
+
+- [x] **Authentication Pages**
+  - [x] Login page with redirect support
+  - [x] Register page with validation
+  - [x] Session history page
+  - [x] Zustand auth store with token persistence
 
 ## Phase 4: Visualizations (Week 4–5)
 **Goal:** High-quality 2D and 3D data visualization with post-processing effects.
 
-- [ ] **2D Visualizations (Recharts/Visx)**
-  - [ ] Implement `Chart2D` wrapper with draw-in animations
+- [ ] **2D Visualizations (Recharts/Vega-Lite)**
+  - [ ] Implement chart rendering in VizPanel — currently shows JSON/text tables only
   - [ ] Build Histogram — bars grow from zero with stagger
   - [ ] Build Scatter plot — points fade in
   - [ ] Build Line chart — line traces left-to-right
   - [ ] Build Force-Directed Graph for correlations (Visx)
   - [ ] Build Bar chart — horizontal for SHAP importance
 
-- [ ] **3D Visualizations (React Three Fiber + Drei + PostFX)**
-  - [ ] Set up `Scene3D` canvas with `OrbitControls`
+- [x] **3D Visualizations (React Three Fiber + Drei)**
+  - [x] Set up `Scene3D` canvas with `OrbitControls`, lighting, environment
+  - [x] Implement `PCAScatter3D` — glow, labels, color-coded groups
   - [ ] Configure PostFX: depth-of-field, bloom glow
-  - [ ] Implement `PCAScatter3D` — glow on hover, depth blur on distant points
   - [ ] Implement `ClusterOrbs` — refractive semi-transparent spheres
   - [ ] Implement `UMAPEmbedding` — animated morph between n_neighbors values
   - [ ] Add particle trails for cluster confidence
+  - [ ] Wire 3D scenes into VizPanel — currently shows placeholder text
   - [ ] Ensure responsive resizing of canvas
 
 - [ ] **Integration**
-  - [ ] Update `generate_chart_spec` tool to produce compatible JSON
-  - [ ] Implement chart rendering logic based on agent output
+  - [ ] Render Vega-Lite specs from agent as actual charts (not JSON preview)
   - [ ] Viz canvas expands on "big insight" detection
 
 ## Phase 5: Polish & Deploy (Week 5–6)
@@ -121,18 +135,18 @@ Based on [PRD v2.0](docs/PRD.md) — **Terminal Aesthetic Edition**
   - [ ] Add loading states with agent avatar pulses
   - [ ] Polish warm dark mode color palette
   - [ ] Agent timeline scrubber — click to jump to reasoning step
+  - [ ] True row-by-row "unfold" animation on file upload
 
 - [ ] **Features**
-  - [ ] **Auto-Insight Mode** — agent scans data, surfaces 3-5 non-obvious findings
+  - [ ] **Auto-Insight Mode** — agent scans data, surfaces 3-5 non-obvious findings (modal exists with static demo data)
   - [ ] Implement Export functionality (PNG, PDF, CSV)
   - [ ] Add "Clear Session" / Reset functionality
   - [ ] Sound design (optional, muted by default): keyboard clicks, pops, chimes
 
-- [ ] **Performance & Deployment**
-  - [ ] Test with large files (50MB+) and optimize
-  - [X] Create `Dockerfile` for Backend
-  - [X] Create `Dockerfile` for Frontend
-  - [X] Create `docker-compose.yml` for full stack orchestration
+- [x] **Performance & Deployment**
+  - [x] Create `Dockerfile` for Backend
+  - [x] Create `Dockerfile` for Frontend
+  - [x] Create `docker-compose.yml` for full stack orchestration
   - [x] Write `README.md` with setup instructions and test commands
 
 ---

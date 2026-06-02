@@ -28,7 +28,7 @@ const AUTO_INSIGHTS = [
 export default function WorkspacePage() {
   const { sessionId } = useParams<{ sessionId: string }>()
   const router = useRouter()
-  const { token, checkAuth } = useAuthStore()
+  const { checkAuth } = useAuthStore()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null)
@@ -44,7 +44,7 @@ export default function WorkspacePage() {
         router.push(`/login?redirect=/workspace/${sessionId}`)
       }
     })
-  }, [])
+  }, [checkAuth, router, sessionId])
 
   // Fetch session info on mount
   useEffect(() => {

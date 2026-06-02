@@ -31,7 +31,7 @@ export default function HistoryPage() {
       }
       loadSessions()
     })
-  }, [])
+  }, [checkAuth, router])
 
   const loadSessions = async () => {
     try {

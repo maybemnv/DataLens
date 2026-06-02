@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Integer, DateTime, JSON, Text, Index, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship
 
@@ -10,7 +10,7 @@ def _utcnow() -> datetime:
 
     Matches the database columns defined as TIMESTAMP WITHOUT TIME ZONE.
     """
-    return datetime.utcnow()
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class User(Base):

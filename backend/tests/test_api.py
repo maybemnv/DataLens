@@ -4,6 +4,17 @@ import pandas as pd
 import numpy as np
 from httpx import AsyncClient, ASGITransport
 from backend.main import app
+from backend.auth import get_current_user
+from backend.db.models import User
+
+
+@pytest.fixture(autouse=True)
+def override_auth():
+    """Override auth dependency to return a mock user — no DB needed."""
+    mock_user = User(id=1, email="test@example.com", hashed_password="mock")
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+    yield
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 @pytest.fixture

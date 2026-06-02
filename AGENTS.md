@@ -14,7 +14,7 @@ FastAPI + LangChain ReAct agent (Groq LLM) + Next.js 16 frontend. Users upload C
 # Backend
 cd backend
 .venv\Scripts\Activate          # Windows
-uv run uvicorn backend.main:app --reload      # dev server at :8000
+uv run uvicorn backend.main:app --reload      # dev server at :8000 (run from project root, NOT from backend/)
 uv run pytest -v                              # all backend tests (70)
 uv run pytest tests/backend/test_api.py -v    # focused test file
 uv run ruff check .                           # lint

@@ -256,7 +256,7 @@ export function createWebSocketClient({
   reconnectBaseDelay = 1000,
 }: CreateWebSocketClientOptions): WebSocketClient {
   const token = typeof window !== 'undefined' ? localStorage.getItem('datalens_token') : ''
-  const wsUrl = `${WS_BASE_URL}/ws/${sessionId}?token=${encodeURIComponent(token)}`
+  const wsUrl = `${WS_BASE_URL}/ws/${sessionId}?token=${encodeURIComponent(token ?? '')}`
   console.log('[WS] Connecting:', wsUrl)
 
   let ws: WebSocket | null = null

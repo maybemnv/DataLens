@@ -273,7 +273,7 @@ describe('WebSocket client', () => {
       onConnect: vi.fn(),
     })
 
-    expect(WebSocket).toHaveBeenCalledWith(`${WS_BASE_URL}/ws/test-123`)
+    expect(WebSocket).toHaveBeenCalledWith(`${WS_BASE_URL}/ws/test-123?token=`)
   })
 
   it('calls onConnect callback when connection opens', () => {
