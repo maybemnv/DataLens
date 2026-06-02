@@ -25,7 +25,7 @@ engine = create_async_engine(
     pool_recycle=1800,  # 30 minutes
     pool_pre_ping=True,  # verify connection is alive before using
     future=True,
-)
+
 
 async_session_maker = async_sessionmaker(
     engine,
