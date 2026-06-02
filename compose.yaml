@@ -5,7 +5,7 @@ services:
       dockerfile: ./backend/Dockerfile
     restart: always
     environment:
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
       MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-100}
     ports:
       - "8000:8000"

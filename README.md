@@ -1,6 +1,6 @@
 # DataLens AI
 
-An autonomous data analysis platform powered by a LangChain ReAct agent and Google Gemini. Upload a structured dataset and ask questions in plain English — the agent selects and chains the appropriate analytical tools, returns precise results, and can render Vega-Lite chart specifications for the frontend.
+An autonomous data analysis platform powered by a LangChain ReAct agent (Groq LLM). Upload a structured dataset and ask questions in plain English — the agent selects and chains the appropriate analytical tools, returns precise results, and can render Vega-Lite chart specifications for the frontend.
 
 ## Architecture
 
@@ -37,7 +37,7 @@ graph TD
 - [uv](https://github.com/astral-sh/uv) package manager
 - PostgreSQL 15+
 - Redis (local) or Upstash Redis (cloud)
-- Google Gemini API key
+- Groq API key
 - Node.js 20+ (for frontend)
 
 ## Setup
@@ -59,7 +59,7 @@ Create a `.env` file in the project root:
 
 ```env
 # Required
-GEMINI_API_KEY=your_api_key_here
+GROQ_API_KEY=your_api_key_here
 DB_USER=your_db_user
 DB_PASSWORD=your_db_password
 
@@ -222,7 +222,7 @@ Maximum upload size is configurable via `MAX_UPLOAD_MB` (default: 100 MB).
 Create a `.env` file with a valid API key (required for test imports):
 
 ```env
-GEMINI_API_KEY=your_api_key_here
+GROQ_API_KEY=your_api_key_here
 DB_USER=test_user
 DB_PASSWORD=test_password
 ```

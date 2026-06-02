@@ -5,7 +5,7 @@ Documentation on how the DataLens AI agent reasons, selects tools, and generates
 ## Overview
 
 The agent is built on a **ReAct (Reasoning + Acting)** architecture using:
-- **LLM**: Google Gemini (gemini-2.5-flash)
+- **LLM**: Groq (qwen/qwen3-32b)
 - **Framework**: LangChain with custom tools
 - **Strategy**: Chain-of-thought reasoning with tool orchestration
 
