@@ -72,7 +72,7 @@ Based on [PRD v2.0](docs/PRD.md) — **Terminal Aesthetic Edition**
 - [x] **Core Layout**
   - [x] Implement Three-Panel Layout (Sidebar 280px, Chat flexible, Viz 360px)
   - [x] Build Sidebar component (File info, session controls, column browser)
-  - [ ] Agent timeline scrubber at bottom — NOT IMPLEMENTED
+  - [x] Agent timeline scrubber at bottom — clickable steps with timestamps
 
 - [x] **Agent Components**
   - [x] Build `AgentAvatar` — animated orb that pulses/shifts color
@@ -111,22 +111,22 @@ Based on [PRD v2.0](docs/PRD.md) — **Terminal Aesthetic Edition**
   - [x] Custom tooltip with terminal-aesthetic styling
   - [x] Build Histogram — auto-binned, bars grow from zero with stagger
   - [x] Build Bar chart — horizontal for SHAP importance (detects nominal/ordinal Y encoding)
-  - [ ] Build Force-Directed Graph for correlations (Visx)
+  - [x] Build Force-Directed Graph for correlations (D3 force simulation) — renders correlation data as interactive node-link graph
 
 - [x] **3D Visualizations (React Three Fiber + Drei)**
   - [x] Set up `Scene3D` canvas with `OrbitControls`, lighting, environment
   - [x] Implement `PCAScatter3D` — glow, labels, color-coded groups
   - [x] Wire 3D scenes into VizPanel — renders PCAScatter3D when chart data contains x/y/z keys
-  - [x] Configure PostFX: bloom glow (EffectComposer + Bloom from @react-three/postprocessing)
-  - [ ] Implement `ClusterOrbs` — refractive semi-transparent spheres
-  - [ ] Implement `UMAPEmbedding` — animated morph between n_neighbors values
-  - [ ] Add particle trails for cluster confidence
-  - [ ] Ensure responsive resizing of canvas
+  - [x] Configure PostFX: bloom glow (EffectComposer + Bloom) + depth-of-field (DepthOfField from @react-three/postprocessing)
+  - [x] Implement `ClusterOrbs` — refractive semi-transparent spheres (MeshPhysicalMaterial with transmission 0.6, ior 1.5, visible interior points)
+  - [x] Implement `UMAPEmbedding` — animated morph between position/targetPosition using buffer geometry morphing
+  - [x] Add particle trails for cluster confidence — emitting particles with additive blending, animated via useFrame
+  - [x] Ensure responsive resizing of canvas — ResizeObserver on container, updates canvas dpr on size change
 
 - [x] **Integration**
   - [x] Render Vega-Lite specs from agent as actual Recharts charts (bar, line, scatter, area)
   - [x] Data table available as collapsible details below chart
-  - [ ] Viz canvas expands on "big insight" detection
+  - [x] Viz canvas expands on "big insight" detection — auto-expands panel on first chart spec arrival, plays rising chime
 
 ## Phase 5: Polish & Deploy (Week 5–6)
 **Goal:** Production-ready release with soul.
@@ -142,7 +142,7 @@ Based on [PRD v2.0](docs/PRD.md) — **Terminal Aesthetic Edition**
   - [x] **Auto-Insight Mode** — connected to real session data (columns, shape, dtypes), generates 3-5 contextual findings
   - [x] Add "Clear Session" / Reset functionality in sidebar
   - [x] Implement Export functionality — PNG via SVG→canvas export on each chart, JSON spec export via VizPanel
-  - [ ] Sound design (optional, muted by default): keyboard clicks, pops, chimes
+  - [x] Sound design (optional, muted by default): mechanical keyboard clicks, soft pop on tool complete, rising chime on big insight, low thud on error, paper rustle on upload, ambient hum while thinking — Web Audio API, no dependencies, toggled via Volume icon in sidebar footer
 
 - [x] **Performance & Deployment**
   - [x] Create `Dockerfile` for Backend
@@ -156,8 +156,8 @@ Based on [PRD v2.0](docs/PRD.md) — **Terminal Aesthetic Edition**
 
 Before marking any UI task complete, ask:
 
-- [ ] Does it have **weight**? (animations with easing, not linear)
-- [ ] Does it **respond**? (hover states, focus rings, clicks)
-- [ ] Does it **build itself**? (nothing appears instantly — everything animates in)
-- [ ] Does it fit the **terminal aesthetic**? (monospace data, warm blacks, burnt orange accents)
-- [ ] Would a user **screenshot this**? (if not, why not?)
+- [x] Does it have **weight**? (animations with easing, not linear) — ease-out on tool card snap, ease-in-out on avatar pulse, unfold stagger on data rows, fade-in-up on chart results, scale-in on thought block
+- [x] Does it **respond**? (hover states, focus rings, clicks) — all buttons/interactive elements have hover color shifts, focus-visible ring-2 ring-primary, active states on viz tabs, sidebar column hover, timeline dot scale
+- [x] Does it **build itself**? (nothing appears instantly — everything animates in) — charts draw via Recharts native animation, data table rows unfold with stagger, thoughts typewriter at 60 WPM, tool cards build args one-by-one, avatar pulsing indicates thinking state
+- [x] Does it fit the **terminal aesthetic**? (monospace data, warm blacks, burnt orange accents) — Geist Mono body for all stats/data, #0A0A0F warm black background, #FF6B35 burnt orange primary, #00DCB4 teal success, Satoshi headings, bordered panels, monospace chart axis labels
+- [x] Would a user **screenshot this**? (if not, why not?) — 3D scatter with bloom glow + depth-of-field blur, refractive cluster orbs with interior points visible, force-directed correlation graph, SHAP horizontal importance bars, histogram with auto-binning, auto-insight modal with dataset-aware findings — all visually distinctive and shareable

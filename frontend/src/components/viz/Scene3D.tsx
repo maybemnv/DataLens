@@ -2,7 +2,7 @@
 
 import { Canvas } from "@react-three/fiber"
 import { OrbitControls, PerspectiveCamera, Environment, ContactShadows } from "@react-three/drei"
-import { EffectComposer, Bloom } from "@react-three/postprocessing"
+import { EffectComposer, Bloom, DepthOfField } from "@react-three/postprocessing"
 import { Suspense } from "react"
 import { cn } from "@/lib/utils"
 import { Maximize2, RotateCcw, Download } from "lucide-react"
@@ -15,7 +15,8 @@ interface Scene3DProps {
 }
 
 /**
- * Scene3D — React Three Fiber canvas with professional lighting.
+ * Scene3D — React Three Fiber canvas with professional lighting, bloom, and depth-of-field.
+ * Canvas automatically fills its container and is responsive via R3F built-in resize handling.
  */
 export function Scene3D({ children, className, showControls = true }: Scene3DProps) {
   return (
@@ -91,9 +92,15 @@ export function Scene3D({ children, className, showControls = true }: Scene3DPro
           zoomSpeed={0.5}
         />
 
-        {/* Post-processing effects */}
+        {/* Post-processing effects: Bloom + Depth of Field */}
         <EffectComposer>
           <Bloom luminanceThreshold={0.6} luminanceSmoothing={0.02} intensity={0.8} mipmapBlur />
+          <DepthOfField
+            focusDistance={0.02}
+            focalLength={0.08}
+            bokehScale={2.5}
+            height={480}
+          />
         </EffectComposer>
 
         <Suspense fallback={null}>{children}</Suspense>

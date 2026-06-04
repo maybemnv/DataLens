@@ -54,6 +54,14 @@ interface WorkspaceState {
   activeTimelineIndex: number | null
   setActiveTimelineIndex: (index: number | null) => void
 
+  // Sound
+  soundEnabled: boolean
+  setSoundEnabled: (enabled: boolean) => void
+
+  // Viz canvas expand on insight
+  vizExpanded: boolean
+  setVizExpanded: (expanded: boolean) => void
+
   // Reset everything
   reset: () => void
 }
@@ -68,6 +76,8 @@ const initialState = {
   vizPanelFullscreen: false,
   autoInsightOpen: false,
   activeTimelineIndex: null as number | null,
+  soundEnabled: false,
+  vizExpanded: false,
 }
 
 export const useWorkspaceStore = create<WorkspaceState>()((set) => ({
@@ -95,6 +105,10 @@ export const useWorkspaceStore = create<WorkspaceState>()((set) => ({
   setAutoInsightOpen: (open) => set({ autoInsightOpen: open }),
 
   setActiveTimelineIndex: (index) => set({ activeTimelineIndex: index }),
+
+  setSoundEnabled: (enabled) => set({ soundEnabled: enabled }),
+
+  setVizExpanded: (expanded) => set({ vizExpanded: expanded }),
 
   reset: () => set(initialState),
 }))

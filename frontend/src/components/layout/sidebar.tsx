@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { FileText, Hash, Type, Calendar, ChevronRight, ChevronDown, Upload, Settings, Trash2 } from "lucide-react"
+import { FileText, Hash, Type, Calendar, ChevronRight, ChevronDown, Upload, Settings, Trash2, Volume2, VolumeX } from "lucide-react"
 import { useWorkspaceStore } from "@/lib/store"
+import { Sound } from "@/lib/sound"
 
 function SectionToggle({
   label,
@@ -30,9 +31,16 @@ function SectionToggle({
 export function Sidebar() {
   const [sections, setSections] = useState({ columns: true, history: false })
   const sessionInfo = useWorkspaceStore((s) => s.sessionInfo)
+  const soundEnabled = useWorkspaceStore((s) => s.soundEnabled)
+  const setSoundEnabled = useWorkspaceStore((s) => s.setSoundEnabled)
 
   const toggle = (k: keyof typeof sections) =>
     setSections((p) => ({ ...p, [k]: !p[k] }))
+
+  const toggleSound = useCallback(() => {
+    const muted = Sound.toggle()
+    setSoundEnabled(!muted)
+  }, [setSoundEnabled])
 
   const numericCols = sessionInfo?.columns.filter((c) => sessionInfo.dtypes[c]?.match(/int|float/i)) ?? []
   const textCols = sessionInfo?.columns.filter((c) => sessionInfo.dtypes[c]?.match(/object|string|category/i)) ?? []
@@ -144,6 +152,18 @@ export function Sidebar() {
           <button className="flex flex-1 items-center justify-center gap-1.5 rounded px-3 py-2 text-xs text-text-muted transition-colors hover:bg-elevated hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <Upload className="h-3.5 w-3.5" aria-hidden="true" />
             Upload
+          </button>
+          <button
+            onClick={toggleSound}
+            className="flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label={soundEnabled ? "Mute sounds" : "Enable sounds"}
+            title={soundEnabled ? "Mute sounds" : "Enable sounds"}
+          >
+            {soundEnabled ? (
+              <Volume2 className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+            ) : (
+              <VolumeX className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
+            )}
           </button>
           <button
             onClick={() => useWorkspaceStore.getState().reset()}
