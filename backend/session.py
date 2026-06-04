@@ -1,10 +1,14 @@
-import json
+import asyncio
 import io
+import json
 import base64
 from datetime import timedelta
 from typing import Optional
 
+import boto3
+import botocore.exceptions
 import pandas as pd
+from botocore.config import Config as BotoConfig
 from cachetools import LRUCache
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,6 +25,88 @@ logger = get_logger(__name__)
 # Max 10 DataFrames in memory. Entries are evicted automatically by
 # LRU policy AND manually when sessions expire or are deleted.
 _memory_cache: LRUCache[str, pd.DataFrame] = LRUCache(maxsize=10)
+
+# ─── R2 / S3-compatible storage ────────────────────────────────────
+_R2_CLIENT: boto3.Session | None = None
+
+
+def _get_r2_client() -> boto3.Session:
+    global _R2_CLIENT
+    if _R2_CLIENT is None:
+        _R2_CLIENT = boto3.Session(
+            aws_access_key_id=settings.r2_access_key,
+            aws_secret_access_key=settings.r2_secret_key,
+        )
+    return _R2_CLIENT
+
+
+async def _store_df_in_r2(session_id: str, df: pd.DataFrame) -> None:
+    if not settings.has_r2:
+        return
+    try:
+        buf = io.BytesIO()
+        df.to_parquet(buf, index=False)
+        key = f"df/{session_id}.parquet"
+
+        def _put():
+            s3 = _get_r2_client().client(
+                "s3",
+                endpoint_url=settings.r2_endpoint,
+                config=BotoConfig(signature_version="s3v4"),
+            )
+            s3.put_object(
+                Bucket=settings.r2_bucket,
+                Key=key,
+                Body=buf.getvalue(),
+                ContentType="application/octet-stream",
+            )
+
+        await asyncio.to_thread(_put)
+    except Exception as e:
+        logger.warning(f"Failed to store DataFrame in R2 (session {session_id}): {e}")
+
+
+async def _load_df_from_r2(session_id: str) -> Optional[pd.DataFrame]:
+    if not settings.has_r2:
+        return None
+    try:
+        key = f"df/{session_id}.parquet"
+
+        def _get():
+            s3 = _get_r2_client().client(
+                "s3",
+                endpoint_url=settings.r2_endpoint,
+                config=BotoConfig(signature_version="s3v4"),
+            )
+            obj = s3.get_object(Bucket=settings.r2_bucket, Key=key)
+            return obj["Body"].read()
+
+        data = await asyncio.to_thread(_get)
+        return pd.read_parquet(io.BytesIO(data))
+    except botocore.exceptions.ClientError:
+        return None
+    except Exception as e:
+        logger.warning(f"Failed to load DataFrame from R2 (session {session_id}): {e}")
+        return None
+
+
+async def _delete_df_from_r2(session_id: str) -> None:
+    if not settings.has_r2:
+        return
+    try:
+        key = f"df/{session_id}.parquet"
+
+        def _delete():
+            s3 = _get_r2_client().client(
+                "s3",
+                endpoint_url=settings.r2_endpoint,
+                config=BotoConfig(signature_version="s3v4"),
+            )
+            s3.delete_object(Bucket=settings.r2_bucket, Key=key)
+
+        await asyncio.to_thread(_delete)
+    except Exception as e:
+        logger.warning(f"Failed to delete DataFrame from R2 (session {session_id}): {e}")
 
 
 def _resolve_id(raw: Optional[str]) -> str:
@@ -81,7 +167,10 @@ async def create_session(df: pd.DataFrame, filename: str, db: AsyncSession, user
     import uuid
     session_id = str(uuid.uuid4())
 
-    await _store_df_in_redis(session_id, df)
+    await asyncio.gather(
+        _store_df_in_redis(session_id, df),
+        _store_df_in_r2(session_id, df),
+    )
 
     schema = _build_schema(df, filename)
     expires_at = utcnow() + timedelta(seconds=settings.session_ttl_seconds)
@@ -161,7 +250,14 @@ async def get_df(session_id: str, db: AsyncSession) -> Optional[pd.DataFrame]:
 
     df = await _load_df_from_redis(resolved_id)
     if df is None:
-        logger.warning(f"DataFrame not found in Redis: {resolved_id}")
+        logger.debug(f"Redis miss for {resolved_id}, trying R2...")
+        df = await _load_df_from_r2(resolved_id)
+        if df is not None:
+            # Re-populate Redis for fast access
+            await _store_df_in_redis(resolved_id, df)
+
+    if df is None:
+        logger.warning(f"DataFrame not found: {resolved_id}")
         return None
 
     _memory_cache[resolved_id] = df
@@ -195,6 +291,8 @@ async def delete_session(session_id: str, db: AsyncSession) -> bool:
         await redis.client.delete(f"df:{resolved_id}")
     except Exception as e:
         logger.warning(f"Failed to delete Redis data for session {resolved_id}: {e}")
+
+    await _delete_df_from_r2(resolved_id)
 
     logger.info(f"Deleted session: {resolved_id}")
     return True
