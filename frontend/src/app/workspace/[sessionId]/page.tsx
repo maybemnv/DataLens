@@ -10,21 +10,6 @@ import { useAuthStore } from "@/lib/stores/auth"
 import { useWorkspaceStore } from "@/lib/store"
 import { AlertCircle, Sparkles } from "lucide-react"
 
-const AUTO_INSIGHTS = [
-  {
-    title: "Spending variance is increasing over time",
-    body: "While total budget grew over the period, variance between agencies is accelerating — suggesting diverging budget priorities across departments.",
-  },
-  {
-    title: "One category dominates disproportionate budget share",
-    body: "A small subset of categories consumes the majority of total expenditure relative to their program count, indicating a high cost-per-program ratio.",
-  },
-  {
-    title: "Q4 spending spikes correlate with lower outcome scores",
-    body: "Agencies that spend heavily in Q4 show lower output metrics — consistent with rushed end-of-year budget consumption.",
-  },
-]
-
 export default function WorkspacePage() {
   const { sessionId } = useParams<{ sessionId: string }>()
   const router = useRouter()
@@ -143,7 +128,6 @@ export default function WorkspacePage() {
       {/* Insight modal — triggered by user action, not a timer */}
       {autoInsightOpen && (
         <AutoInsightModal
-          insights={AUTO_INSIGHTS}
           onDigDeeper={handleDigDeeper}
           onShowVisualizations={handleShowVisualizations}
           onDismiss={handleDismissInsights}
