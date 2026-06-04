@@ -6,6 +6,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Maximize2, Minimize2, ImageDown, BarChart3, ScatterChart, Wifi, WifiOff } from "lucide-react"
 import { useWorkspaceStore } from "@/lib/store"
 import type { VegaLiteSpec } from "@/lib/types"
+import { VegaLiteRenderer } from "@/components/charts/VegaLiteRenderer"
+import { Scene3D } from "@/components/viz/Scene3D"
+import { PCAScatter3D } from "@/components/viz/PCAScatter3D"
 
 interface VizPanelProps {
   chartSpec?: VegaLiteSpec | null
@@ -13,21 +16,13 @@ interface VizPanelProps {
 
 const TABS = ["PCA", "Clusters", "Forecast"] as const
 
-/**
- * VizPanel — visualization panel for the workspace.
- * - 3D view: React Three Fiber scene (for spatial/cluster data)
- * - 2D view: Renders Vega-Lite specs as JSON preview or chart placeholder
- * - No hardcoded demo data — only shows what the backend sends
- */
 export function VizPanel({ chartSpec }: VizPanelProps) {
-  // Zustand store — shared UI state
   const view = useWorkspaceStore((s) => s.vizPanelView)
   const setView = useWorkspaceStore((s) => s.setVizPanelView)
   const fullscreen = useWorkspaceStore((s) => s.vizPanelFullscreen)
   const setFullscreen = useWorkspaceStore((s) => s.setVizPanelFullscreen)
   const agentState = useWorkspaceStore((s) => s.agentState)
   const isActive = agentState === "thinking" || agentState === "executing"
-
   const isConnected = agentState !== "idle" || chartSpec !== null
 
   const handleToggleFullscreen = useCallback(() => {
@@ -45,68 +40,92 @@ export function VizPanel({ chartSpec }: VizPanelProps) {
     URL.revokeObjectURL(url)
   }, [chartSpec])
 
-  // Render 2D view — either chart spec preview or empty state
+  // Check if chartSpec has 3D-capable data
+  const has3DData = useMemo(() => {
+    if (!chartSpec?.data?.values || chartSpec.data.values.length === 0) return false
+    const first = chartSpec.data.values[0]
+    return (
+      typeof first === "object" &&
+      first !== null &&
+      "x" in first &&
+      "y" in first &&
+      "z" in first
+    )
+  }, [chartSpec])
+
+  // Extract 3D points from chart spec
+  const points3D = useMemo(() => {
+    if (!has3DData || !chartSpec?.data?.values) return []
+    return chartSpec.data.values.map((d) => ({
+      x: Number(d.x ?? 0),
+      y: Number(d.y ?? 0),
+      z: Number(d.z ?? 0),
+      label: "label" in d ? String(d.label) : undefined,
+      group: "group" in d ? Number(d.group) : undefined,
+    }))
+  }, [has3DData, chartSpec])
+
   const render2DView = useMemo(() => {
     if (chartSpec) {
+      const titleText =
+        typeof chartSpec.title === "string"
+          ? chartSpec.title
+          : chartSpec.title && typeof chartSpec.title === "object" && "text" in chartSpec.title
+            ? String((chartSpec.title as { text: string }).text)
+            : "Chart"
+
       return (
         <div className="h-full p-4">
           <div className="rounded border border-border bg-surface p-4">
             <div className="mb-3 flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-primary" aria-hidden="true" />
-              <p className="text-sm font-semibold text-text-primary">
-                {typeof chartSpec.title === "string"
-                  ? chartSpec.title
-                  : chartSpec.title && typeof chartSpec.title === "object" && "text" in chartSpec.title
-                    ? String(chartSpec.title.text)
-                    : "Chart"}
-              </p>
+              <p className="text-sm font-semibold text-text-primary">{titleText}</p>
             </div>
 
-            {/* Chart data preview */}
-            {chartSpec.data?.values && chartSpec.data.values.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs" aria-label="Chart data preview">
-                  <thead>
-                    <tr className="border-b border-border">
-                      {Object.keys(chartSpec.data.values[0]).map((key) => (
-                        <th key={key} className="px-2 py-1.5 font-medium text-text-muted">
-                          {key}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {chartSpec.data.values.slice(0, 10).map((row, i) => (
-                      <tr key={i} className="border-b border-border/50">
-                        {Object.values(row).map((val, j) => (
-                          <td key={j} className="px-2 py-1.5 text-text-secondary">
-                            {String(val)}
-                          </td>
+            <VegaLiteRenderer spec={chartSpec} />
+
+            {/* Data table fallback */}
+            {chartSpec.data?.values && chartSpec.data.values.length > 0 && (
+              <details className="mt-3">
+                <summary className="cursor-pointer text-[11px] font-medium text-text-muted hover:text-text-secondary">
+                  Data ({chartSpec.data.values.length} rows)
+                </summary>
+                <div className="mt-2 overflow-x-auto">
+                  <table className="w-full text-left text-xs" aria-label="Chart data">
+                    <thead>
+                      <tr className="border-b border-border">
+                        {Object.keys(chartSpec.data.values[0]).map((key) => (
+                          <th key={key} className="px-2 py-1.5 font-medium text-text-muted">
+                            {key}
+                          </th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {chartSpec.data.values.length > 10 && (
-                  <p className="mt-2 text-center text-[11px] text-text-muted">
-                    Showing 10 of {chartSpec.data.values.length} rows
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="rounded border border-border bg-elevated p-3 font-mono text-[11px] text-text-muted">
-                <pre className="overflow-x-auto">
-                  {JSON.stringify(chartSpec, null, 2).slice(0, 500)}
-                  {JSON.stringify(chartSpec, null, 2).length > 500 ? "…" : ""}
-                </pre>
-              </div>
+                    </thead>
+                    <tbody>
+                      {chartSpec.data.values.slice(0, 10).map((row, i) => (
+                        <tr key={i} className="border-b border-border/50">
+                          {Object.values(row).map((val, j) => (
+                            <td key={j} className="px-2 py-1.5 text-text-secondary">
+                              {String(val)}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {chartSpec.data.values.length > 10 && (
+                    <p className="mt-2 text-center text-[11px] text-text-muted">
+                      Showing 10 of {chartSpec.data.values.length} rows
+                    </p>
+                  )}
+                </div>
+              </details>
             )}
           </div>
         </div>
       )
     }
 
-    // No chart spec yet
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <BarChart3 className="mb-3 h-10 w-10 text-text-disabled" aria-hidden="true" />
@@ -115,6 +134,30 @@ export function VizPanel({ chartSpec }: VizPanelProps) {
       </div>
     )
   }, [chartSpec])
+
+  const render3DView = useMemo(() => {
+    if (points3D.length > 0) {
+      return (
+        <Scene3D>
+          <PCAScatter3D points={points3D} showLabels />
+        </Scene3D>
+      )
+    }
+    if (chartSpec) {
+      return (
+        <Scene3D>
+          <PCAScatter3D points={[]} />
+        </Scene3D>
+      )
+    }
+    return (
+      <div className="flex h-full items-center justify-center">
+        <p className="text-sm text-text-muted">
+          3D view requires real data. Ask the agent to run PCA or clustering.
+        </p>
+      </div>
+    )
+  }, [points3D, chartSpec])
 
   return (
     <div
@@ -183,11 +226,7 @@ export function VizPanel({ chartSpec }: VizPanelProps) {
       {/* Canvas */}
       <div className="flex-1 overflow-hidden border-t border-border">
         {view === "3d" ? (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-sm text-text-muted">
-              3D view requires real data. Ask the agent to run PCA or clustering.
-            </p>
-          </div>
+          render3DView
         ) : (
           <ScrollArea className="h-full">
             {render2DView}
