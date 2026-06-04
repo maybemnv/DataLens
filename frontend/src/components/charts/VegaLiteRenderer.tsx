@@ -20,6 +20,7 @@ import {
 import type { VegaLiteSpec } from "@/lib/types"
 import { parseVegaLiteSpec } from "@/lib/vega-lite-utils"
 import { Download } from "lucide-react"
+import { ForceDirectedGraph } from "@/components/viz/ForceDirectedGraph"
 
 interface VegaLiteRendererProps {
   spec: VegaLiteSpec
@@ -87,6 +88,34 @@ export function VegaLiteRenderer({ spec, onExportPNG }: VegaLiteRendererProps) {
     return encY?.type === "nominal" || encY?.type === "ordinal"
   }, [spec])
 
+  // Detect correlation data for force-directed graph
+  const correlationData = useMemo(() => {
+    if (!spec?.data?.values || spec.data.values.length === 0) return null
+    const first = spec.data.values[0]
+    if (
+      typeof first === "object" &&
+      first !== null &&
+      "source" in first &&
+      "target" in first &&
+      "value" in first
+    ) {
+      const nodeSet = new Set<string>()
+      spec.data.values.forEach((d) => {
+        nodeSet.add(String(d.source))
+        nodeSet.add(String(d.target))
+      })
+      return {
+        nodes: Array.from(nodeSet).map((id) => ({ id })),
+        links: spec.data.values.map((d) => ({
+          source: String(d.source),
+          target: String(d.target),
+          value: Number(d.value),
+        })),
+      }
+    }
+    return null
+  }, [spec])
+
   const handleExport = useCallback(() => {
     if (onExportPNG) {
       onExportPNG()
@@ -96,6 +125,20 @@ export function VegaLiteRenderer({ spec, onExportPNG }: VegaLiteRendererProps) {
   }, [onExportPNG])
 
   const chartContent = useMemo(() => {
+    // Force-directed graph for correlation data
+    if (correlationData && correlationData.nodes.length > 0) {
+      return (
+        <div className="flex justify-center py-4">
+          <ForceDirectedGraph
+            nodes={correlationData.nodes}
+            links={correlationData.links}
+            width={440}
+            height={320}
+          />
+        </div>
+      )
+    }
+
     if (!config || config.data.length === 0) return null
 
     const data = config.data
@@ -246,13 +289,13 @@ export function VegaLiteRenderer({ spec, onExportPNG }: VegaLiteRendererProps) {
       default:
         return null
     }
-  }, [config, isHorizontal])
+  }, [config, isHorizontal, correlationData])
 
   return (
     <div>
       <div ref={chartRef} className="relative">
         {chartContent}
-        {config && (
+        {config && !correlationData && (
           <button
             onClick={handleExport}
             className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded bg-surface/80 text-text-muted opacity-0 transition-opacity hover:opacity-100 hover:text-text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -263,7 +306,7 @@ export function VegaLiteRenderer({ spec, onExportPNG }: VegaLiteRendererProps) {
           </button>
         )}
       </div>
-      {!config && (
+      {!config && !correlationData && (
         <div className="rounded border border-border bg-elevated p-4 font-mono text-[11px] text-text-muted">
           <pre className="overflow-x-auto">Unsupported or empty chart spec</pre>
         </div>
