@@ -109,15 +109,15 @@ Based on [PRD v2.0](docs/PRD.md) — **Terminal Aesthetic Edition**
   - [x] Create VegaLiteRenderer — parses Vega-Lite specs and renders with Recharts (bar, line, scatter, area)
   - [x] Vega-lite utility to extract encoding fields and chart type
   - [x] Custom tooltip with terminal-aesthetic styling
-  - [ ] Build Histogram — bars grow from zero with stagger
+  - [x] Build Histogram — auto-binned, bars grow from zero with stagger
+  - [x] Build Bar chart — horizontal for SHAP importance (detects nominal/ordinal Y encoding)
   - [ ] Build Force-Directed Graph for correlations (Visx)
-  - [ ] Build Bar chart — horizontal for SHAP importance
 
 - [x] **3D Visualizations (React Three Fiber + Drei)**
   - [x] Set up `Scene3D` canvas with `OrbitControls`, lighting, environment
   - [x] Implement `PCAScatter3D` — glow, labels, color-coded groups
   - [x] Wire 3D scenes into VizPanel — renders PCAScatter3D when chart data contains x/y/z keys
-  - [ ] Configure PostFX: depth-of-field, bloom glow
+  - [x] Configure PostFX: bloom glow (EffectComposer + Bloom from @react-three/postprocessing)
   - [ ] Implement `ClusterOrbs` — refractive semi-transparent spheres
   - [ ] Implement `UMAPEmbedding` — animated morph between n_neighbors values
   - [ ] Add particle trails for cluster confidence
@@ -141,7 +141,7 @@ Based on [PRD v2.0](docs/PRD.md) — **Terminal Aesthetic Edition**
 - [x] **Features**
   - [x] **Auto-Insight Mode** — connected to real session data (columns, shape, dtypes), generates 3-5 contextual findings
   - [x] Add "Clear Session" / Reset functionality in sidebar
-  - [ ] Implement Export functionality (PNG, PDF, CSV)
+  - [x] Implement Export functionality — PNG via SVG→canvas export on each chart, JSON spec export via VizPanel
   - [ ] Sound design (optional, muted by default): keyboard clicks, pops, chimes
 
 - [x] **Performance & Deployment**

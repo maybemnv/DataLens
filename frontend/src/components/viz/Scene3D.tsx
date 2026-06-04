@@ -2,6 +2,7 @@
 
 import { Canvas } from "@react-three/fiber"
 import { OrbitControls, PerspectiveCamera, Environment, ContactShadows } from "@react-three/drei"
+import { EffectComposer, Bloom } from "@react-three/postprocessing"
 import { Suspense } from "react"
 import { cn } from "@/lib/utils"
 import { Maximize2, RotateCcw, Download } from "lucide-react"
@@ -89,6 +90,11 @@ export function Scene3D({ children, className, showControls = true }: Scene3DPro
           dampingFactor={0.1}
           zoomSpeed={0.5}
         />
+
+        {/* Post-processing effects */}
+        <EffectComposer>
+          <Bloom luminanceThreshold={0.6} luminanceSmoothing={0.02} intensity={0.8} mipmapBlur />
+        </EffectComposer>
 
         <Suspense fallback={null}>{children}</Suspense>
       </Canvas>
