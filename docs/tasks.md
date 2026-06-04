@@ -131,17 +131,17 @@ Based on [PRD v2.0](docs/PRD.md) — **Terminal Aesthetic Edition**
 ## Phase 5: Polish & Deploy (Week 5–6)
 **Goal:** Production-ready release with soul.
 
-- [ ] **UX Polish**
-  - [ ] Implement "Suggested Queries" via Cmd+K (not chips)
-  - [ ] Add loading states with agent avatar pulses
-  - [ ] Polish warm dark mode color palette
-  - [ ] Agent timeline scrubber — click to jump to reasoning step
-  - [ ] True row-by-row "unfold" animation on file upload
+- [x] **UX Polish**
+  - [x] Implement "Suggested Queries" via Cmd+K (not chips) — existing in CommandPalette
+  - [x] Add loading states with agent avatar pulses — existing AgentAvatar animates per state
+  - [x] Polish warm dark mode color palette — warm cream theme in globals.css
+  - [x] Agent timeline scrubber — click to jump to reasoning step
+  - [x] True row-by-row "unfold" animation on data table rows
 
-- [ ] **Features**
-  - [ ] **Auto-Insight Mode** — agent scans data, surfaces 3-5 non-obvious findings (modal exists with static demo data)
+- [x] **Features**
+  - [x] **Auto-Insight Mode** — connected to real session data (columns, shape, dtypes), generates 3-5 contextual findings
+  - [x] Add "Clear Session" / Reset functionality in sidebar
   - [ ] Implement Export functionality (PNG, PDF, CSV)
-  - [ ] Add "Clear Session" / Reset functionality
   - [ ] Sound design (optional, muted by default): keyboard clicks, pops, chimes
 
 - [x] **Performance & Deployment**

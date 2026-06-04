@@ -107,18 +107,25 @@ export function ThreePanelLayout({ sessionId, sessionInfo }: ThreePanelLayoutPro
               </span>
             ) : (
               timelineSteps.map((step, i) => (
-                <div key={`${step.label}-${i}`} className="flex shrink-0 items-center" role="listitem">
+                <button
+                  key={`${step.label}-${i}`}
+                  onClick={() => useWorkspaceStore.getState().setActiveTimelineIndex(i)}
+                  className="flex shrink-0 items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+                  role="listitem"
+                  aria-label={`Step ${i + 1}: ${step.label}`}
+                >
                   <div className="flex flex-col items-center gap-0.5">
                     <div
                       className={cn(
-                        "h-2 w-2 rounded-full",
+                        "h-2 w-2 rounded-full transition-transform",
                         i === timelineSteps.length - 1 && agentState !== "idle"
                           ? "bg-primary animate-pulse-fast"
-                          : "bg-success"
+                          : "bg-success",
+                        useWorkspaceStore.getState().activeTimelineIndex === i && "scale-150"
                       )}
                       aria-hidden="true"
                     />
-                    <span className="max-w-[72px] truncate text-[10px] text-text-muted" title={step.label}>
+                    <span className="max-w-[72px] truncate text-[10px] text-text-muted hover:text-text-primary transition-colors" title={step.label}>
                       {step.label}
                     </span>
                     <span className="font-mono text-[9px] tabular-nums text-text-disabled">
@@ -128,7 +135,7 @@ export function ThreePanelLayout({ sessionId, sessionInfo }: ThreePanelLayoutPro
                   {i < timelineSteps.length - 1 && (
                     <div className="mx-1.5 h-px w-5 bg-border" aria-hidden="true" />
                   )}
-                </div>
+                </button>
               ))
             )}
             {agentState === "idle" && timelineSteps.length > 0 && (

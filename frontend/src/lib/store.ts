@@ -50,6 +50,10 @@ interface WorkspaceState {
   autoInsightOpen: boolean
   setAutoInsightOpen: (open: boolean) => void
 
+  // Timeline scrubber
+  activeTimelineIndex: number | null
+  setActiveTimelineIndex: (index: number | null) => void
+
   // Reset everything
   reset: () => void
 }
@@ -63,6 +67,7 @@ const initialState = {
   vizPanelView: "3d" as "3d" | "2d",
   vizPanelFullscreen: false,
   autoInsightOpen: false,
+  activeTimelineIndex: null as number | null,
 }
 
 export const useWorkspaceStore = create<WorkspaceState>()((set) => ({
@@ -88,6 +93,8 @@ export const useWorkspaceStore = create<WorkspaceState>()((set) => ({
   setVizPanelFullscreen: (fs) => set({ vizPanelFullscreen: fs }),
 
   setAutoInsightOpen: (open) => set({ autoInsightOpen: open }),
+
+  setActiveTimelineIndex: (index) => set({ activeTimelineIndex: index }),
 
   reset: () => set(initialState),
 }))
