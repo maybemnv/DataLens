@@ -108,6 +108,25 @@ class DescribeDatasetInput(SessionUnwrapper):
     pass
 
 
+class UMAPInput(SessionUnwrapper):
+    columns: Optional[list[str]] = None
+    n_components: int = Field(default=2, ge=2, le=3)
+    n_neighbors: int = Field(default=15, ge=2, le=200)
+    min_dist: float = Field(default=0.1, ge=0.0, le=1.0)
+
+
+class HDBSCANInput(SessionUnwrapper):
+    columns: Optional[list[str]] = None
+    min_cluster_size: int = Field(default=5, ge=2, le=100)
+    min_samples: Optional[int] = None
+
+
+class SHAPInput(SessionUnwrapper):
+    target_column: Optional[str] = None
+    feature_columns: Optional[list[str]] = None
+    max_display: int = Field(default=10, ge=1, le=50)
+
+
 class GenerateChartSpecInput(SessionUnwrapper):
     chart_type: Optional[str] = Field(default=None, description="One of: scatter, line, bar, histogram, heatmap, box")
     x_column: Optional[str] = None

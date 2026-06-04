@@ -88,6 +88,9 @@ Tool selection guide — use the FIRST matching rule:
   Outliers or anomalies in numeric data → outliers_summary, detect_anomalies
   Reduce dimensions or find structure → run_pca
   Group rows into clusters → run_kmeans
+  Cluster with unknown K or noisy data → run_hdbscan
+  Visualise high-dimensional data in 2D/3D → run_umap
+  Explain model predictions or feature importance → run_shap
   Predict a numeric value → run_regression
   Predict a category → run_classification
   Trend, seasonality, or stationarity of a time series → check_stationarity, decompose_time_series
