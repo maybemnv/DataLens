@@ -31,13 +31,13 @@ Based on [PRD v2.0](docs/PRD.md) — **Terminal Aesthetic Edition**
 
 - [x] **Testing**
   - [x] Write integration tests for all migrated tools
-  - [x] 241 tests passing across API, statistical, ML, time series, benchmarks
+  - [x] 264 tests passing across API, statistical, ML, time series, benchmarks (17 tools, 3 new)
   - [x] Comprehensive edge-case test suites for each tool domain
 
-- [ ] **Additional Tools (PRD-specified, deps installed)**
-  - [ ] Implement `run_umap` LangChain tool (umap-learn installed)
-  - [ ] Implement `run_hdbscan` LangChain tool (hdbscan installed)
-  - [ ] Implement `run_shap` LangChain tool (shap installed)
+- [x] **Additional Tools (PRD-specified, deps installed)**
+  - [x] Implement `run_umap` LangChain tool (umap-learn installed)
+  - [x] Implement `run_hdbscan` LangChain tool (hdbscan installed)
+  - [x] Implement `run_shap` LangChain tool (shap installed)
 
 ## Phase 2: Agent Core (Week 2–3)
 **Goal:** A smart ReAct agent that can plan and execute analysis.

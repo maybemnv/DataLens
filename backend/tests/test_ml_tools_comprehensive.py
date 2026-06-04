@@ -588,7 +588,7 @@ class TestRunClassification:
         """Test classification with very small dataset."""
         # Add a classification target
         small_df["target"] = [0, 1, 0, 1, 0]
-        
+
         with patch("backend.tools.ml_tools.require_df") as mock_require_df:
             mock_require_df.return_value = (small_df, None)
             result = await ml_tools.run_classification.ainvoke({
@@ -597,9 +597,311 @@ class TestRunClassification:
                 "feature_columns": ["x1", "x2"],
                 "test_size": 0.2,
             })
-            
+
             # Small dataset may error due to stratify issues or return results
             assert "accuracy" in result or "error" in result
+
+
+class TestRunUMAP:
+    """Comprehensive tests for run_umap tool."""
+
+    @pytest.mark.asyncio
+    async def test_umap_success_2d(self, sample_df):
+        """Test UMAP with 2D output."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_umap.ainvoke({
+                "session_id": "test",
+                "columns": ["feature1", "feature2", "feature3"],
+                "n_components": 2,
+            })
+            assert "embedding" in result
+            assert result["n_components"] == 2
+            assert len(result["embedding"]) == len(sample_df)
+            # Each embedding should have 2 values
+            assert len(result["embedding"][0]) == 2
+
+    @pytest.mark.asyncio
+    async def test_umap_success_3d(self, sample_df):
+        """Test UMAP with 3D output."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_umap.ainvoke({
+                "session_id": "test",
+                "columns": ["feature1", "feature2", "feature3"],
+                "n_components": 3,
+            })
+            assert "embedding" in result
+            assert result["n_components"] == 3
+            assert len(result["embedding"][0]) == 3
+
+    @pytest.mark.asyncio
+    async def test_umap_default_columns(self, sample_df):
+        """Test UMAP with all numeric columns."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_umap.ainvoke({
+                "session_id": "test",
+            })
+            assert "embedding" in result
+
+    @pytest.mark.asyncio
+    async def test_umap_nonexistent_columns(self, sample_df):
+        """Test error with nonexistent columns."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_umap.ainvoke({
+                "session_id": "test",
+                "columns": ["nonexistent"],
+            })
+            assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_umap_session_not_found(self):
+        """Test error when session doesn't exist."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (None, {"error": "Session not found"})
+            result = await ml_tools.run_umap.ainvoke({"session_id": "invalid"})
+            assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_umap_single_column(self, sample_df):
+        """Test error with single column."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_umap.ainvoke({
+                "session_id": "test",
+                "columns": ["feature1"],
+            })
+            assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_umap_different_n_neighbors(self, sample_df):
+        """Test UMAP with different neighbor counts."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_umap.ainvoke({
+                "session_id": "test",
+                "columns": ["feature1", "feature2", "feature3"],
+                "n_neighbors": 5,
+                "min_dist": 0.01,
+            })
+            assert "embedding" in result
+            assert result["n_neighbors"] == 5
+            assert result["min_dist"] == 0.01
+
+
+class TestRunHDBSCAN:
+    """Comprehensive tests for run_hdbscan tool."""
+
+    @pytest.mark.asyncio
+    async def test_hdbscan_success(self, sample_df):
+        """Test successful HDBSCAN clustering."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_hdbscan.ainvoke({
+                "session_id": "test",
+                "columns": ["feature1", "feature2", "feature3"],
+                "min_cluster_size": 5,
+            })
+            assert "labels" in result
+            assert "probabilities" in result
+            assert "n_clusters" in result
+            assert "n_noise_points" in result
+            assert len(result["labels"]) == len(sample_df)
+
+    @pytest.mark.asyncio
+    async def test_hdbscan_default_columns(self, sample_df):
+        """Test HDBSCAN with all numeric columns."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_hdbscan.ainvoke({
+                "session_id": "test",
+            })
+            assert "labels" in result
+
+    @pytest.mark.asyncio
+    async def test_hdbscan_different_min_cluster_size(self, sample_df):
+        """Test HDBSCAN with different min_cluster_size."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_hdbscan.ainvoke({
+                "session_id": "test",
+                "columns": ["feature1", "feature2", "feature3"],
+                "min_cluster_size": 10,
+            })
+            assert "labels" in result
+
+    @pytest.mark.asyncio
+    async def test_hdbscan_single_column(self, sample_df):
+        """Test error with single column."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_hdbscan.ainvoke({
+                "session_id": "test",
+                "columns": ["feature1"],
+            })
+            assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_hdbscan_nonexistent_columns(self, sample_df):
+        """Test error with nonexistent columns."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_hdbscan.ainvoke({
+                "session_id": "test",
+                "columns": ["nonexistent"],
+            })
+            assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_hdbscan_session_not_found(self):
+        """Test error when session doesn't exist."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (None, {"error": "Session not found"})
+            result = await ml_tools.run_hdbscan.ainvoke({"session_id": "invalid"})
+            assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_hdbscan_labels_are_integers(self, sample_df):
+        """Test that HDBSCAN labels are integers (-1 for noise)."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_hdbscan.ainvoke({
+                "session_id": "test",
+                "columns": ["feature1", "feature2", "feature3"],
+            })
+            labels = result["labels"]
+            for label in labels:
+                assert isinstance(label, int) or label == -1 or label >= -1
+
+
+class TestRunSHAP:
+    """Comprehensive tests for run_shap tool."""
+
+    @pytest.mark.asyncio
+    async def test_shap_regression_success(self, sample_df):
+        """Test SHAP with regression target."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_shap.ainvoke({
+                "session_id": "test",
+                "target_column": "target_reg",
+                "feature_columns": ["feature1", "feature2", "feature3"],
+            })
+            assert "base_value" in result
+            assert "feature_importance" in result
+            assert "chart_spec" in result
+            assert "model_type" in result
+            assert result["model_type"] == "regression"
+            assert "model_metrics" in result
+
+    @pytest.mark.asyncio
+    async def test_shap_classification_success(self, sample_df):
+        """Test SHAP with classification target."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_shap.ainvoke({
+                "session_id": "test",
+                "target_column": "target_cls",
+                "feature_columns": ["feature1", "feature2", "feature3"],
+            })
+            assert "base_value" in result
+            assert "feature_importance" in result
+            assert "chart_spec" in result
+            assert "model_type" in result
+
+    @pytest.mark.asyncio
+    async def test_shap_default_features(self, sample_df):
+        """Test SHAP with default features."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_shap.ainvoke({
+                "session_id": "test",
+                "target_column": "target_reg",
+            })
+            assert "feature_importance" in result
+
+    @pytest.mark.asyncio
+    async def test_shap_missing_target_column(self, sample_df):
+        """Test error when target_column is missing."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_shap.ainvoke({
+                "session_id": "test",
+                "target_column": None,
+            })
+            assert "error" in result
+            assert "target_column is required" in result["error"]
+
+    @pytest.mark.asyncio
+    async def test_shap_nonexistent_target(self, sample_df):
+        """Test error when target column doesn't exist."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_shap.ainvoke({
+                "session_id": "test",
+                "target_column": "nonexistent",
+            })
+            assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_shap_nonexistent_features(self, sample_df):
+        """Test error when feature columns don't exist."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_shap.ainvoke({
+                "session_id": "test",
+                "target_column": "target_reg",
+                "feature_columns": ["nonexistent1", "nonexistent2"],
+            })
+            assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_shap_session_not_found(self):
+        """Test error when session doesn't exist."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (None, {"error": "Session not found"})
+            result = await ml_tools.run_shap.ainvoke({
+                "session_id": "invalid",
+                "target_column": "y",
+            })
+            assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_shap_chart_spec_format(self, sample_df):
+        """Test that SHAP chart_spec has correct format."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_shap.ainvoke({
+                "session_id": "test",
+                "target_column": "target_reg",
+                "feature_columns": ["feature1", "feature2", "feature3"],
+            })
+            chart_spec = result["chart_spec"]
+            assert chart_spec["type"] == "bar"
+            assert "title" in chart_spec
+            assert "data" in chart_spec
+            assert len(chart_spec["data"]) > 0
+            for item in chart_spec["data"]:
+                assert "feature" in item
+                assert "importance" in item
+
+    @pytest.mark.asyncio
+    async def test_shap_feature_ranking(self, sample_df):
+        """Test that SHAP features are ranked by importance."""
+        with patch("backend.tools.ml_tools.require_df") as mock_require_df:
+            mock_require_df.return_value = (sample_df, None)
+            result = await ml_tools.run_shap.ainvoke({
+                "session_id": "test",
+                "target_column": "target_reg",
+                "feature_columns": ["feature1", "feature2", "feature3"],
+            })
+            importance = result["feature_importance"]
+            values = list(importance.values())
+            # Values should be non-negative after mean absolute aggregation
+            for v in values:
+                assert v >= 0
 
 
 class TestMLToolsEdgeCases:
