@@ -103,7 +103,7 @@ export function VizPanel({ chartSpec }: VizPanelProps) {
                     </thead>
                     <tbody>
                       {chartSpec.data.values.slice(0, 10).map((row, i) => (
-                        <tr key={i} className="border-b border-border/50">
+                        <tr key={i} className="border-b border-border/50 animate-unfold" style={{ animationDelay: `${i * 30}ms` }}>
                           {Object.values(row).map((val, j) => (
                             <td key={j} className="px-2 py-1.5 text-text-secondary">
                               {String(val)}

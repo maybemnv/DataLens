@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { FileText, Hash, Type, Calendar, ChevronRight, ChevronDown, Upload, Settings } from "lucide-react"
+import { FileText, Hash, Type, Calendar, ChevronRight, ChevronDown, Upload, Settings, Trash2 } from "lucide-react"
 import { useWorkspaceStore } from "@/lib/store"
 
 function SectionToggle({
@@ -144,6 +144,14 @@ export function Sidebar() {
           <button className="flex flex-1 items-center justify-center gap-1.5 rounded px-3 py-2 text-xs text-text-muted transition-colors hover:bg-elevated hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <Upload className="h-3.5 w-3.5" aria-hidden="true" />
             Upload
+          </button>
+          <button
+            onClick={() => useWorkspaceStore.getState().reset()}
+            className="flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-elevated hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Clear session"
+            title="Clear session"
+          >
+            <Trash2 className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
           </button>
           <button className="flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-elevated hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Settings">
             <Settings className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
