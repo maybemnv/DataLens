@@ -9,7 +9,9 @@ class Settings(BaseSettings):
     groq_api_key: str = Field(validation_alias="GROQ_API_KEY")
     model_name: str = Field(default="qwen/qwen3-32b")
 
-    # API Configuration
+    # Database Configuration
+    # Use DATABASE_URL for full connection string override (e.g., Neon with sslmode=require)
+    database_url_override: str = Field(default="", validation_alias="DATABASE_URL")
     db_host: str = Field(default="127.0.0.1", validation_alias="DB_HOST")
     db_port: int = Field(default=5432, validation_alias="DB_PORT")
     db_user: str = Field(validation_alias="DB_USER")
@@ -19,14 +21,31 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
-        # URL-encode password to handle special characters like @, :, etc.
+        if self.database_url_override:
+            return self.database_url_override
         encoded_password = quote_plus(self.db_password)
         return f"{self.db_driver}://{self.db_user}:{encoded_password}@{self.db_host}:{self.db_port}/{self.db_name}"
     
-    # Database Configuration
+    # Redis Configuration
     upstash_redis_rest_url: str = Field(default="", validation_alias="UPSTASH_REDIS_REST_URL")
     upstash_redis_rest_token: str = Field(default="", validation_alias="UPSTASH_REDIS_REST_TOKEN")
     redis_url: str = Field(default="redis://127.0.0.1:6379/0", validation_alias="REDIS_URL")
+
+    # R2 / S3-compatible Storage Configuration
+    r2_account_id: str = Field(default="", validation_alias="R2_ACCOUNT_ID")
+    r2_access_key: str = Field(default="", validation_alias="R2_ACCESS_KEY")
+    r2_secret_key: str = Field(default="", validation_alias="R2_SECRET_KEY")
+    r2_bucket: str = Field(default="datalens", validation_alias="R2_BUCKET")
+
+    @property
+    def r2_endpoint(self) -> str | None:
+        if self.r2_account_id:
+            return f"https://{self.r2_account_id}.r2.cloudflarestorage.com"
+        return None
+
+    @property
+    def has_r2(self) -> bool:
+        return bool(self.r2_account_id and self.r2_access_key and self.r2_secret_key)
     
     @property
     def is_upstash_redis(self) -> bool:
@@ -86,8 +105,11 @@ class Settings(BaseSettings):
         return v.strip()
     @field_validator("db_user", "db_password")
     @classmethod
-    def validate_db_credentials(cls, v: str) -> str:
+    def validate_db_credentials(cls, v: str, info) -> str:
         if not v or v.strip() == "":
+            # Allow empty when DATABASE_URL override is provided
+            if info.data.get("database_url_override"):
+                return v
             raise ValueError("Database credentials (DB_USER, DB_PASSWORD) must be set in environment variables")
         return v.strip()
 
@@ -188,9 +210,14 @@ class Settings(BaseSettings):
                 "port": self.db_port,
                 "user": self.db_user[:3] + "***" if len(self.db_user) > 3 else "***",
                 "database": self.db_name,
-                "driver": self.db_driver
+                "driver": self.db_driver,
+                "url_override": bool(self.database_url_override),
             },
             "redis": self.get_redis_info(),
+            "r2": {
+                "configured": self.has_r2,
+                "bucket": self.r2_bucket,
+            },
             "cors_origins": self.cors_origins,
             "max_upload_mb": self.max_upload_mb,
             "session_ttl_seconds": self.session_ttl_seconds
