@@ -105,26 +105,27 @@ Based on [PRD v2.0](docs/PRD.md) — **Terminal Aesthetic Edition**
 ## Phase 4: Visualizations (Week 4–5)
 **Goal:** High-quality 2D and 3D data visualization with post-processing effects.
 
-- [ ] **2D Visualizations (Recharts/Vega-Lite)**
-  - [ ] Implement chart rendering in VizPanel — currently shows JSON/text tables only
+- [x] **2D Visualizations (Recharts)**
+  - [x] Create VegaLiteRenderer — parses Vega-Lite specs and renders with Recharts (bar, line, scatter, area)
+  - [x] Vega-lite utility to extract encoding fields and chart type
+  - [x] Custom tooltip with terminal-aesthetic styling
   - [ ] Build Histogram — bars grow from zero with stagger
-  - [ ] Build Scatter plot — points fade in
-  - [ ] Build Line chart — line traces left-to-right
   - [ ] Build Force-Directed Graph for correlations (Visx)
   - [ ] Build Bar chart — horizontal for SHAP importance
 
 - [x] **3D Visualizations (React Three Fiber + Drei)**
   - [x] Set up `Scene3D` canvas with `OrbitControls`, lighting, environment
   - [x] Implement `PCAScatter3D` — glow, labels, color-coded groups
+  - [x] Wire 3D scenes into VizPanel — renders PCAScatter3D when chart data contains x/y/z keys
   - [ ] Configure PostFX: depth-of-field, bloom glow
   - [ ] Implement `ClusterOrbs` — refractive semi-transparent spheres
   - [ ] Implement `UMAPEmbedding` — animated morph between n_neighbors values
   - [ ] Add particle trails for cluster confidence
-  - [ ] Wire 3D scenes into VizPanel — currently shows placeholder text
   - [ ] Ensure responsive resizing of canvas
 
-- [ ] **Integration**
-  - [ ] Render Vega-Lite specs from agent as actual charts (not JSON preview)
+- [x] **Integration**
+  - [x] Render Vega-Lite specs from agent as actual Recharts charts (bar, line, scatter, area)
+  - [x] Data table available as collapsible details below chart
   - [ ] Viz canvas expands on "big insight" detection
 
 ## Phase 5: Polish & Deploy (Week 5–6)
