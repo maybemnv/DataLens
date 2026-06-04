@@ -1,52 +1,58 @@
-# Use a slim Python image for the base
-FROM python:3.13-slim AS base
+# ============================================================
+# Stage 1: Build  — install system deps + Python dependencies
+# ============================================================
+FROM python:3.13-slim AS builder
 
-# Prevent Python from writing .pyc files and enable unbuffered logging
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# Set the working directory
-WORKDIR /app
+WORKDIR /build
 
-# Install system dependencies (needed for prophet, pandas, etc.)
+# Install system build deps (needed for prophet, pandas, umap-learn, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    gcc \
+    g++ \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv for faster package management
+# Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Copy dependency files
+# Copy dependency manifests
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies using uv
-# --frozen ensures we use the exact versions from uv.lock
+# Install project dependencies into /build/.venv
 RUN uv sync --frozen --no-install-project --no-dev
 
-# Second stage: final image
+# ============================================================
+# Stage 2: Runtime  — minimal image with deps + source
+# ============================================================
 FROM python:3.13-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
 
-# Copy the virtual environment from the base stage
-COPY --from=base /app/.venv /app/.venv
+# Runtime system deps (minimal)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Add the virtual environment's bin to the PATH
-ENV PATH="/app/.venv/bin:$PATH"
+# Copy virtual environment from builder
+COPY --from=builder /build/.venv /app/.venv
 
-# Copy the backend source code
+# Copy backend source code
 COPY backend/ ./backend/
-# Copy requirements/config if they are in root and needed (usually backend/ contains its own logic)
-# Based on the structure, backend/ is a subfolder. 
-# We'll run from the root of /app, so 'backend.main:app'
 
-# Expose the port
+# Expose port
 EXPOSE 8000
 
 # Healthcheck
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 
-  CMD curl -f http://localhost:8000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
-# Run the application
+# Run with uvicorn
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

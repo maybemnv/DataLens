@@ -52,15 +52,15 @@ app = FastAPI(
 
 logger = get_logger(__name__)
 
+if settings.is_production():
+    allowed_origins = settings.cors_origins
+else:
+    allowed_origins = settings.cors_origins + ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:3001",
-        "*",
-    ],
-    allow_credentials=True,
+    allow_origins=allowed_origins,
+    allow_credentials=settings.cors_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

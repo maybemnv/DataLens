@@ -1,43 +1,47 @@
-# Stage 1: Build
+# ============================================================
+# Stage 1: Build  — install deps + compile Next.js
+# ============================================================
 FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Install build dependencies if needed
+# Install build deps if needed (e.g., sharp for image optimization)
 # RUN apt-get update && apt-get install -y --no-install-recommends ...
 
-# Copy package management files
+# Copy dependency manifests
 COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (--frozen-lockfile ensures lockfile integrity)
+RUN npm ci --frozen-lockfile
 
-# Copy the rest of the frontend source
+# Copy the rest of the source
 COPY . .
 
-# Build the Next.js application
+# Build the Next.js app (produces .next/standalone)
 RUN npm run build
 
-# Stage 2: Production
+# ============================================================
+# Stage 2: Runner  — minimal production image
+# ============================================================
 FROM node:20-slim AS runner
+
+ENV NODE_ENV=production
 
 WORKDIR /app
 
-# Set environment to production
-ENV NODE_ENV=production
-
-# Copy necessary files from builder
-# We only need the public folder, the static assets, and the standalone build
-COPY --from=builder /app/public ./public
+# Copy standalone build (includes node_modules pruned to production only)
 COPY --from=builder /app/.next/standalone ./
+
+# Copy static assets (not included in standalone)
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/static ./.next/static
 
-# Expose the port
+# Expose port
 EXPOSE 3000
 
 # Healthcheck
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 
-  CMD curl -f http://localhost:3000/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Start the application
+# Start the standalone server
 CMD ["node", "server.js"]
