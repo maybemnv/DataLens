@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     model_name: str = Field(default="qwen/qwen3-32b")
 
     # Database Configuration
-    # Use DATABASE_URL for full connection string override (e.g., Neon with sslmode=require)
+    # Use DATABASE_URL for full connection string override (e.g., Supabase). SSL is configured in database.py via connect_args.
     database_url_override: str = Field(default="", validation_alias="DATABASE_URL")
     db_host: str = Field(default="127.0.0.1", validation_alias="DB_HOST")
     db_port: int = Field(default=5432, validation_alias="DB_PORT")

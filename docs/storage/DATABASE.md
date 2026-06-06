@@ -8,17 +8,17 @@ SQLAlchemy async engine (`postgresql+asyncpg`) connecting to **Supabase PostgreS
 
 ### Connection String
 ```
-postgresql+asyncpg://USER:PASSWORD@DB_HOST.supabase.co:5432/DB_NAME?sslmode=require
+postgresql+asyncpg://USER:PASSWORD@DB_HOST.supabase.co:5432/DB_NAME
 ```
 
 - Password chars must be URL-encoded: `*` → `%2A`, `@` → `%40`
-- `?sslmode=require` is mandatory (Supabase rejects non-SSL)
+- SSL is configured via `connect_args={"ssl": "require"}` in `database.py` (not URL query params)
 
 ### From Supabase Dashboard
 1. **Project Settings → Database → Connection string**
 2. Copy URI, replace `postgresql://` with `postgresql+asyncpg://`
 3. URL-encode special chars in password
-4. Append `?sslmode=require`
+4. (SSL is configured via `connect_args` in `database.py`, not in the URL)
 
 ### Config Resolution (`backend/config.py`)
 
@@ -218,7 +218,7 @@ User deletes session ──→ cascade delete all children
 
 ## Troubleshooting
 
-**`sslmode=require` error**: URL must end with `?sslmode=require`.
+**SSL connection error**: Ensured by `connect_args={"ssl": "require"}` in `database.py`. If you see an SSL error, verify Supabase allows your IP (Supabase Dashboard → Authentication → Policies).
 
 **`password authentication failed`**: Check URL encoding. Test with:
 ```python

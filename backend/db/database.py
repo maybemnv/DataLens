@@ -24,6 +24,7 @@ engine = create_async_engine(
     pool_timeout=30,
     pool_recycle=1800,  # 30 minutes
     pool_pre_ping=True,  # verify connection is alive before using
+    connect_args={"ssl": "require"},  # Supabase requires SSL
     future=True,
 )
 
