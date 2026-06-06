@@ -91,16 +91,25 @@ async def save_message(
     if db is None:
         return
 
-    message = Message(
-        session_id=session_id,
-        role=role,
-        content=content,
-        tool_name=tool_name,
-        tool_input=sanitize_for_json(tool_input) if isinstance(tool_input, dict) else tool_input,
-        tool_result=sanitize_for_json(tool_result) if isinstance(tool_result, dict) else tool_result,
-    )
-    db.add(message)
-    await db.commit()
+    safe_tool_name = str(tool_name)[:128] if tool_name else None
+
+    try:
+        message = Message(
+            session_id=session_id,
+            role=role,
+            content=content,
+            tool_name=safe_tool_name,
+            tool_input=sanitize_for_json(tool_input) if isinstance(tool_input, dict) else tool_input,
+            tool_result=sanitize_for_json(tool_result) if isinstance(tool_result, dict) else tool_result,
+        )
+        db.add(message)
+        await db.commit()
+    except Exception as e:
+        logger.warning(f"Failed to persist message (session {session_id}): {e}")
+        try:
+            await db.rollback()
+        except Exception:
+            pass
 
 
 async def save_tool_run(
@@ -114,15 +123,26 @@ async def save_tool_run(
     if db is None:
         return
 
-    tool_run = ToolRun(
-        session_id=session_id,
-        tool_name=tool_name,
-        input_json=sanitize_for_json(tool_input),
-        result_json=sanitize_for_json(tool_result),
-        duration_ms=duration_ms,
-    )
-    db.add(tool_run)
-    await db.commit()
+    # Defensive: malformed LLM output can produce non-string tool names.
+    # Coerce to string and cap at 128 chars to match the column constraint.
+    safe_tool_name = str(tool_name)[:128] if tool_name else "unknown"
+
+    try:
+        tool_run = ToolRun(
+            session_id=session_id,
+            tool_name=safe_tool_name,
+            input_json=sanitize_for_json(tool_input),
+            result_json=sanitize_for_json(tool_result),
+            duration_ms=duration_ms,
+        )
+        db.add(tool_run)
+        await db.commit()
+    except Exception as e:
+        logger.warning(f"Failed to persist tool_run (session {session_id}, tool={safe_tool_name[:40]}): {e}")
+        try:
+            await db.rollback()
+        except Exception:
+            pass
 
 
 async def save_chart(
@@ -266,12 +286,13 @@ async def websocket_endpoint(
                 )
 
                 for action, observation in result.get("intermediate_steps", []):
+                    tool_name = action.tool if isinstance(action.tool, str) else str(action.tool)[:128]
                     tool_input = action.tool_input if isinstance(action.tool_input, dict) else {"input": str(action.tool_input)}
                     tool_result = observation if isinstance(observation, dict) else {"output": str(observation)}
 
                     await save_tool_run(
                         session_id,
-                        action.tool,
+                        tool_name,
                         tool_input,
                         tool_result,
                         duration_ms,
@@ -353,12 +374,13 @@ async def chat(
     )
 
     for action, observation in result.get("intermediate_steps", []):
+        tool_name = action.tool if isinstance(action.tool, str) else str(action.tool)[:128]
         tool_input = action.tool_input if isinstance(action.tool_input, dict) else {"input": str(action.tool_input)}
         tool_result = observation if isinstance(observation, dict) else {"output": str(observation)}
 
         await save_tool_run(
             session_id,
-            action.tool,
+            tool_name,
             tool_input,
             tool_result,
             duration_ms,
