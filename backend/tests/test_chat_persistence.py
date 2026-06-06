@@ -4,7 +4,7 @@ These guard against malformed LLM output (long tool names, non-string
 tool names, etc.) that would otherwise fail DB inserts.
 """
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 from backend.routes.chat import save_message, save_tool_run
 

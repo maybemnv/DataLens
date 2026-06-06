@@ -6,21 +6,27 @@ interface AuthState {
   token: string | null
   isLoading: boolean
   error: string | null
+  hasHydrated: boolean
 
   register: (email: string, password: string) => Promise<void>
   login: (email: string, password: string) => Promise<void>
   logout: () => void
   checkAuth: () => Promise<void>
   clearError: () => void
+  setHasHydrated: (v: boolean) => void
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
+  // token starts as null on both server and client first render to avoid
+  // hydration mismatch. Real token is loaded in the browser by checkAuth()
+  // and by reading localStorage on the client.
   user: null,
-  token: getToken(),
+  token: null,
   isLoading: false,
   error: null,
+  hasHydrated: false,
 
-  register: async (email: string, password: string) => {
+  register: async (email, password) => {
     set({ isLoading: true, error: null })
     try {
       const res = await authApi.register(email, password)
@@ -32,7 +38,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  login: async (email: string, password: string) => {
+  login: async (email, password) => {
     set({ isLoading: true, error: null })
     try {
       const res = await authApi.login(email, password)
@@ -52,17 +58,19 @@ export const useAuthStore = create<AuthState>((set) => ({
   checkAuth: async () => {
     const token = getToken()
     if (!token) {
-      set({ user: null, token: null })
+      set({ user: null, token: null, hasHydrated: true })
       return
     }
     try {
       const user = await authApi.me()
-      set({ user, token })
+      set({ user, token, hasHydrated: true })
     } catch {
       clearToken()
-      set({ user: null, token: null })
+      set({ user: null, token: null, hasHydrated: true })
     }
   },
 
   clearError: () => set({ error: null }),
+
+  setHasHydrated: (v) => set({ hasHydrated: v }),
 }))

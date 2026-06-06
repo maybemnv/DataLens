@@ -18,7 +18,7 @@ export default function HomePage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const abortRef = useRef<(() => void) | null>(null)
 
-  const { user, token, logout, checkAuth } = useAuthStore()
+  const { user, token, logout, checkAuth, hasHydrated } = useAuthStore()
 
   const [state, setState] = useState<UploadState>("idle")
   const [progress, setProgress] = useState(0)
@@ -121,7 +121,7 @@ export default function HomePage() {
           DataLens<span className="text-primary"> AI</span>
         </Link>
         <div className="flex items-center gap-3">
-          {token && user && (
+          {hasHydrated && token && user && (
             <>
               <Link
                 href="/history"
@@ -294,8 +294,10 @@ insights = llm.analyze(df.head(100))`}
             )}
           </div>
 
-          {/* Inline CTA row */}
-          {state === "idle" && token && (
+          {/* Inline CTA row — gated on `hasHydrated` to avoid hydration mismatch
+              (token lives in localStorage and is only available after the auth
+              store has rehydrated from localStorage on the client) */}
+          {hasHydrated && state === "idle" && token && (
             <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-text-muted" aria-label="Upload requirements">
               <span>CSV, XLSX, Parquet</span>
               <span className="h-3 w-px bg-border" aria-hidden="true" />

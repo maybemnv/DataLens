@@ -55,7 +55,7 @@ def _get_or_create_executor(session_id: str) -> AgentExecutor:
         groq_api_key=settings.groq_api_key,
         streaming=True,
         temperature=0,
-        max_retries=1,
+        max_retries=0,  # disable Groq client internal retries — we use tenacity
     )
     prompt = PromptTemplate(
         template=_SYSTEM_PROMPT,
@@ -165,8 +165,8 @@ def _is_retryable(exc: BaseException) -> bool:
 
 @retry(
     retry=retry_if_exception(_is_retryable),
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=1, max=8),
+    stop=stop_after_attempt(2),
+    wait=wait_exponential(multiplier=1, min=1, max=4),
     reraise=True,
 )
 async def _invoke(executor: AgentExecutor, payload: dict, callback=None) -> dict:
